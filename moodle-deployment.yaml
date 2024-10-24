@@ -1,0 +1,54 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  annotations:
+    kompose.cmd: kompose convert -f docker-compose.yml
+    kompose.version: 1.26.1 (a9d05d509)
+  creationTimestamp: null
+  labels:
+    io.kompose.service: moodle
+  name: moodle
+spec:
+  replicas: 1  # Incrementa el número de réplicas para alta disponibilidad
+  selector:
+    matchLabels:
+      io.kompose.service: moodle
+  strategy: {}
+  template:
+    metadata:
+      annotations:
+        kompose.cmd: kompose convert -f docker-compose.yml
+        kompose.version: 1.26.1 (a9d05d509)
+      creationTimestamp: null
+      labels:
+        io.kompose.service: moodle
+    spec:
+      containers:
+        - name: moodle
+          image: docker.io/bitnami/moodle:4.1
+          ports:
+            - containerPort: 8080
+            - containerPort: 8443
+          env:
+            - name: ALLOW_EMPTY_PASSWORD
+              value: "yes"
+            - name: MOODLE_DATABASE_HOST
+              value: mariadb
+            - name: MOODLE_DATABASE_NAME
+              value: bitnami_moodle
+            - name: MOODLE_DATABASE_PORT_NUMBER
+              value: "3306"
+            - name: MOODLE_DATABASE_USER
+              value: bn_moodle
+          volumeMounts:
+            - name: moodle-pv-storage
+              mountPath: /bitnami/moodle  # Monta el PVC en la ruta donde Moodle almacena sus datos principales
+            - name: moodle-pv-storage
+              mountPath: /bitnami/moodledata  # Monta el PVC en la ruta donde Moodle almacena los datos dinámicos
+          resources: {}
+      volumes:
+        - name: moodle-pv-storage
+          persistentVolumeClaim:
+            claimName: moodle-pv-claim  # Nombre del PVC para la persistencia
+      restartPolicy: Always
+status: {}
