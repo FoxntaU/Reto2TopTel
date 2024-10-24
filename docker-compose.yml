@@ -1,0 +1,28 @@
+  GNU nano 5.8                                                                                        docker-compose.yml                                                                                                   
+version: '3'
+services:
+  mariadb:
+    image: docker.io/bitnami/mariadb:11.4
+    ports:
+      - '3306:3306'
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes
+      - MARIADB_USER=bn_moodle
+      - MARIADB_DATABASE=bitnami_moodle
+      - MARIADB_CHARACTER_SET=utf8mb4
+      - MARIADB_COLLATE=utf8mb4_unicode_ci
+
+  moodle:
+    image: docker.io/bitnami/moodle:4.1
+    ports:
+      - '80:8080'
+      - '443:8443'
+    environment:
+      - MOODLE_DATABASE_HOST=mariadb
+      - MOODLE_DATABASE_PORT_NUMBER=3306
+      - MOODLE_DATABASE_USER=bn_moodle
+      - MOODLE_DATABASE_NAME=bitnami_moodle
+      - ALLOW_EMPTY_PASSWORD=yes
+
+    depends_on:
+      - mariadb
