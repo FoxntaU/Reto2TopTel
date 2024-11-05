@@ -7,7 +7,7 @@ Este controlador gestiona el tráfico de entrada en el clúster de Kubernetes.
 kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
 kubectl get pods -n ingress-nginx
 ```
-Configura un PV con capacidad de 5Gi y con el acceso ReadWriteMany usando EFS.
+Configura un PV con capacidad de 5Gi y con el acceso ReadWriteMany usando EFS. y la PV de Maria db
 ```bash
 yaml
 Copiar código
@@ -31,19 +31,23 @@ kubectl apply -f drupal-efs-pv.yaml
 
 ```bash
 apiVersion: v1
-kind: PersistentVolumeClaim
+kind: PersistentVolume
 metadata:
-  name: drupal-efs-pvc
+  name: mariadb-pv
 spec:
+  capacity:
+    storage: 1Gi
   accessModes:
-    - ReadWriteMany
-  resources:
-    requests:
-      storage: 5Gi
-
+    - ReadWriteOnce
+  hostPath:
+    path: /mnt/data
 
 ```
-Define el PVC para reclamar el volumen EFS previamente creado.
+
+```bash
+kubectl apply -f db-pv.yaml
+```
+Define el PVC para reclamar el volumen EFS previamente creado
 
 ```bash
 apiVersion: v1
