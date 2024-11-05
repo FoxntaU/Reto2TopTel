@@ -1,25 +1,95 @@
-Aquí tienes el contenido en formato Markdown:
+# Instrucciones para la instalación de Drupal en Kubernetes con almacenamiento EFS y certificación TLS
 
-```markdown
-# Despliegue desde Cero
-
-Una vez que todo esté eliminado, aquí tienes el orden recomendado para ejecutar los comandos y volver a desplegar todo.
-
-## Instalar el Controlador NGINX Ingress
-
-Este paso configura el balanceador de carga y el enrutamiento de tráfico. Usa Helm para instalar el controlador NGINX Ingress:
+Instalar el Ingress NGINX Controller
+Este controlador gestiona el tráfico de entrada en el clúster de Kubernetes.
 
 ```bash
-helm repo add ingress-nginx https://kubernetes.github.io/ingress-nginx
-helm repo update
-helm install nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+kubectl get pods -n ingress-nginx
+```
+Configura un PV con capacidad de 5Gi y con el acceso ReadWriteMany usando EFS.
+```bash
+yaml
+Copiar código
+apiVersion: v1
+kind: PersistentVolume
+metadata:
+  name: drupal-efs-pv
+spec:
+  capacity:
+    storage: 5Gi
+  accessModes:
+    - ReadWriteMany
+  persistentVolumeReclaimPolicy: Retain
+  csi:
+    driver: efs.csi.aws.com
+    volumeHandle: fs-0e2dc5966adbfb99c
+```
+```bash
+kubectl apply -f drupal-efs-pv.yaml
 ```
 
-## Crear el ClusterIssuer para Let's Encrypt
+```bash
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-efs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
 
-Define el ClusterIssuer para que Cert-Manager pueda emitir certificados desde Let’s Encrypt:
 
-```yaml
+```
+Define el PVC para reclamar el volumen EFS previamente creado.
+
+```bash
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: drupal-efs-pvc
+spec:
+  accessModes:
+    - ReadWriteMany
+  resources:
+    requests:
+      storage: 5Gi
+
+```
+
+```bash
+kubectl apply -f drupal-efs-pvc.yaml
+
+```
+Crea un PVC con el acceso ReadWriteOnce y una capacidad de 1Gi.
+```bash
+apiVersion: v1
+kind: PersistentVolumeClaim
+metadata:
+  name: mariadb-pvc
+spec:
+  accessModes:
+    - ReadWriteOnce
+  resources:
+    requests:
+      storage: 1Gi
+
+```
+
+```bash
+kubectl apply -f db-pvc.yaml
+```
+Instalar Cert-Manager para la gestión de certificados TLS
+Cert-Manager gestiona los certificados TLS en el clúster.
+
+```bash
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+
+```
+
+```bash
 apiVersion: cert-manager.io/v1
 kind: ClusterIssuer
 metadata:
@@ -31,28 +101,47 @@ spec:
     privateKeySecretRef:
       name: letsencrypt-prod
     solvers:
-      - http01:
-          ingress:
-            class: nginx
-```
+    - http01:
+        ingress:
+          class: nginx
 
-Aplica el ClusterIssuer:
+```
 
 ```bash
 kubectl apply -f clusterissuer.yaml
+
 ```
 
-## Desplegar los Recursos de la Aplicación (Deployments y Services)
 
-Define y despliega los recursos de la aplicación en el archivo `all.yaml` o separadamente:
+```bash
+apiVersion: cert-manager.io/v1
+kind: Certificate
+metadata:
+  name: drupal-tls
+  namespace: default
+spec:
+  secretName: tls-secret
+  issuerRef:
+    name: letsencrypt-prod
+    kind: ClusterIssuer
+  commonName: reto2.crazycookies.fun
+  dnsNames:
+    - reto2.crazycookies.fun
 
-```yaml
+```
+
+```bash
+kubectl apply -f drupal-certificate.yaml
+
+```
+Aplicar los manifiestos de configuración para la aplicación Drupal
+```bash
 apiVersion: apps/v1
 kind: Deployment
 metadata:
   name: drupal
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: drupal
@@ -63,85 +152,58 @@ spec:
     spec:
       containers:
         - name: drupal
-          image: drupal:latest
+          image: bitnami/drupal:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: BITNAMI_DEBUG
+              value: "true"
+            - name: DRUPAL_DATA_TO_PERSIST
+              value: "sites/ themes/ modules/ profiles/"
+            - name: DRUPAL_SKIP_BOOTSTRAP
+              value: "no"
+            - name: DRUPAL_HASH_SALT
+              value: "89f19dbfe6df8d936305a84c0ef632e605dbcd35497a62bf03e6d7faca3ae3f0"
+            - name: DRUPAL_CONFIG_SYNC_DIR
+              value: "/var/www/html/sites/default/files/config"
+            - name: DRUPAL_DATABASE_HOST
+              value: 'db-service'
+            - name: DRUPAL_DATABASE_NAME
+              value: "drupal"
+            - name: DRUPAL_DATABASE_USER
+              value: "drupaluser"
+            - name: DRUPAL_DATABASE_PASSWORD
+              value: "drupalpassword"
+          volumeMounts:
+            - name: drupal-files
+              mountPath: /var/www/html/modules
+              subPath: modules
+            - name: drupal-files
+              mountPath: /var/www/html/profiles
+              subPath: profiles
+            - name: drupal-files
+              mountPath: /var/www/html/sites
+              subPath: sites
+            - name: drupal-files
+              mountPath: /var/www/html/themes
+              subPath: themes
+            - name: drupal-files
+              mountPath: /var/www/html/sites/default/files/config
+              subPath: config
+      volumes:
+        - name: drupal-files
+          persistentVolumeClaim:
+            claimName: drupal-efs-pvc
 ---
-apiVersion: v1
-kind: Service
-metadata:
-  name: drupal-service
-spec:
-  type: ClusterIP
-  selector:
-    app: drupal
-  ports:
-    - protocol: TCP
-      port: 80
-      targetPort: 80
----
-apiVersion: apps/v1
-kind: Deployment
-metadata:
-  name: drupal-db
-spec:
-  replicas: 1
-  selector:
-    matchLabels:
-      app: drupal-db
-  template:
-    metadata:
-      labels:
-        app: drupal-db
-  spec:
-    containers:
-      - name: mariadb
-        image: mariadb:latest
-        env:
-          - name: MYSQL_ROOT_PASSWORD
-            value: "yourpassword"
-          - name: MYSQL_DATABASE
-            value: "drupal"
-          - name: MYSQL_USER
-            value: "drupaluser"
-          - name: MYSQL_PASSWORD
-            value: "drupalpassword"
-        ports:
-          - containerPort: 3306
----
-apiVersion: v1
-kind: Service
-metadata:
-  name: db-service
-spec:
-  selector:
-    app: drupal-db
-  ports:
-    - protocol: TCP
-      port: 3306
-      targetPort: 3306
-```
-
-Aplica los recursos de aplicación:
-
-```bash
-kubectl apply -f all.yaml
-```
-
-## Crear el Ingress y el Certificado
-
-Define el Ingress con la configuración TLS y el Certificate que usará el ClusterIssuer para generar el certificado TLS:
-
-```yaml
 apiVersion: networking.k8s.io/v1
 kind: Ingress
 metadata:
   name: drupal-ingress
-  namespace: default
+  namespace: default  
   annotations:
     nginx.ingress.kubernetes.io/rewrite-target: /
 spec:
-  ingressClassName: nginx
+  ingressClassName: nginx 
   rules:
     - host: reto2.crazycookies.fun
       http:
@@ -156,58 +218,67 @@ spec:
   tls:
     - hosts:
         - reto2.crazycookies.fun
-      secretName: tls-secret
+      secretName: tls-secret  
 ---
-apiVersion: cert-manager.io/v1
-kind: Certificate
+apiVersion: apps/v1
+kind: Deployment
 metadata:
-  name: drupal-tls
-  namespace: default
+  name: drupal-db
 spec:
-  secretName: tls-secret
-  issuerRef:
-    name: letsencrypt-prod
-    kind: ClusterIssuer
-  commonName: reto2.crazycookies.fun
-  dnsNames:
-    - reto2.crazycookies.fun
+  replicas: 1
+  selector:
+    matchLabels:
+      app: drupal-db
+  template:
+    metadata:
+      labels:
+        app: drupal-db
+    spec:
+      containers:
+        - name: mariadb
+          image: bitnami/mariadb:latest
+          env:
+            - name: MARIADB_ROOT_PASSWORD
+              value: "your_root_password"
+            - name: MARIADB_DATABASE
+              value: "drupal"
+            - name: MARIADB_USER
+              value: "drupaluser"
+            - name: MARIADB_PASSWORD
+              value: "drupalpassword"
+          ports:
+            - containerPort: 3306
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: drupal-service
+spec:
+  type: ClusterIP
+  selector:
+    app: drupal
+  ports:
+    - protocol: TCP
+      port: 80
+      targetPort: 8080
+---
+apiVersion: v1
+kind: Service
+metadata:
+  name: db-service
+spec:
+  selector:
+    app: drupal-db
+  ports:
+    - protocol: TCP
+      port: 3306
+      targetPort: 3306
 ```
-
-Aplica el Ingress y el Certificate:
-
-```bash
-kubectl apply -f ingress-and-cert.yaml
-```
-
-## Resumen de Comandos en Orden
-
-### Instalar el controlador NGINX Ingress:
-
-```bash
-helm install nginx-ingress ingress-nginx/ingress-nginx --namespace ingress-nginx --create-namespace
-```
-
-### Crear el ClusterIssuer para Let's Encrypt:
-
-```bash
-kubectl apply -f clusterissuer.yaml
-```
-
-### Desplegar los Deployments y Services de la aplicación:
 
 ```bash
 kubectl apply -f all.yaml
 ```
-
-### Configurar el Ingress y el Certificate:
-
-```bash
-kubectl apply -f ingress-and-cert.yaml
-```
-```
-
-
-kubectl apply -f drupal-efs-pv.yaml
-
-kubectl apply -f drupal-efs-pvc.yaml
-
