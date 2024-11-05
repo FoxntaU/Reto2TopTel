@@ -1,0 +1,51 @@
+kubectl apply -f https://raw.githubusercontent.com/kubernetes/ingress-nginx/main/deploy/static/provider/cloud/deploy.yaml
+kubectl get pods -n ingress-nginx
+kubectl apply -f drupal-efs-pv.yaml
+kubectl apply -f drupal-efs-pvc.yaml
+kubectl apply -f db-pv.yaml
+kubectl apply -f db-pvc.yaml
+kubectl get pvc
+kubectl apply -f https://github.com/jetstack/cert-manager/releases/download/v1.8.0/cert-manager.yaml
+kubectl apply -f clusterissuer.yaml
+kubectl apply -f drupal-certificate.yaml
+kubectl apply -f all.yaml
+
+
+kubectl get pods
+kubectl get deployments
+kubectl get services
+kubectl get pv
+kubectl get pvc
+kubectl get ingress
+kubectl get clusterissuer
+kubectl get certificates
+
+
+kubectl delete deployment efs-test-pod
+kubectl delete deployment drupal
+kubectl delete deployment drupal-db
+kubectl delete ingress drupal-ingress
+kubectl delete service db-service
+kubectl delete clusterissuer letsencrypt-prod
+kubectl delete certificate drupal-tls
+kubectl delete pvc drupal-efs-pvc
+kubectl delete pv drupal-efs-pv
+kubectl delete pv efs-pv   
+kubectl delete pvc mariadb-pvc
+kubectl delete pv mariadb-pv
+kubectl delete service drupal-service
+
+
+kubectl apply -f drupal-efs-pv.yaml
+kubectl apply -f drupal-efs-pvc.yaml
+kubectl apply -f db-pv.yaml
+kubectl apply -f db-pvc.yaml
+kubectl apply -f clusterissuer.yaml
+kubectl apply -f drupal-certificate.yaml
+kubectl apply -f all.yaml
+
+
+kubectl exec -it <nombre-del-pod-de-drupal> -- /bin/sh
+chmod -R 775 /var/www/html/sites/default/files
+chown -R www-data:www-data /var/www/html/sites/default/files
+

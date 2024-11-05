@@ -3,7 +3,7 @@ kind: Deployment
 metadata:
   name: drupal
 spec:
-  replicas: 3
+  replicas: 1
   selector:
     matchLabels:
       app: drupal
@@ -14,9 +14,48 @@ spec:
     spec:
       containers:
         - name: drupal
-          image: drupal:latest
+          image: bitnami/drupal:latest
           ports:
-            - containerPort: 80
+            - containerPort: 8080
+          env:
+            - name: BITNAMI_DEBUG
+              value: "true"
+            - name: DRUPAL_DATA_TO_PERSIST
+              value: "sites/ themes/ modules/ profiles/"
+            - name: DRUPAL_SKIP_BOOTSTRAP
+              value: "yes"
+            - name: DRUPAL_HASH_SALT
+              value: "89f19dbfe6df8d936305a84c0ef632e605dbcd35497a62bf03e6d7faca3ae3f0"
+            - name: DRUPAL_CONFIG_SYNC_DIR
+              value: "/var/www/html/sites/default/files/config"
+            - name: DRUPAL_DATABASE_HOST
+              value: 'db-service'
+            - name: DRUPAL_DATABASE_NAME
+              value: "drupal"
+            - name: DRUPAL_DATABASE_USER
+              value: "drupaluser"
+            - name: DRUPAL_DATABASE_PASSWORD
+              value: "drupalpassword"
+          volumeMounts:
+            - name: drupal-files
+              mountPath: /var/www/html/modules
+              subPath: modules
+            - name: drupal-files
+              mountPath: /var/www/html/profiles
+              subPath: profiles
+            - name: drupal-files
+              mountPath: /var/www/html/sites
+              subPath: sites
+            - name: drupal-files
+              mountPath: /var/www/html/themes
+              subPath: themes
+            - name: drupal-files
+              mountPath: /var/www/html/sites/default/files/config
+              subPath: config
+      volumes:
+        - name: drupal-files
+          persistentVolumeClaim:
+            claimName: drupal-efs-pvc
 ---
 apiVersion: networking.k8s.io/v1
 kind: Ingress
@@ -42,7 +81,6 @@ spec:
     - hosts:
         - reto2.crazycookies.fun
       secretName: tls-secret  
-
 ---
 apiVersion: apps/v1
 kind: Deployment
@@ -60,18 +98,22 @@ spec:
     spec:
       containers:
         - name: mariadb
-          image: mariadb:latest
+          image: bitnami/mariadb:latest
           env:
-            - name: MYSQL_ROOT_PASSWORD
-              value: "yourpassword"
-            - name: MYSQL_DATABASE
+            - name: MARIADB_ROOT_PASSWORD
+              value: "your_root_password"
+            - name: MARIADB_DATABASE
               value: "drupal"
-            - name: MYSQL_USER
+            - name: MARIADB_USER
               value: "drupaluser"
-            - name: MYSQL_PASSWORD
+            - name: MARIADB_PASSWORD
               value: "drupalpassword"
           ports:
             - containerPort: 3306
+      volumes:
+        - name: mariadb-storage
+          persistentVolumeClaim:
+            claimName: mariadb-pvc
 ---
 apiVersion: v1
 kind: Service
@@ -84,7 +126,7 @@ spec:
   ports:
     - protocol: TCP
       port: 80
-      targetPort: 80
+      targetPort: 8080
 ---
 apiVersion: v1
 kind: Service
@@ -97,3 +139,6 @@ spec:
     - protocol: TCP
       port: 3306
       targetPort: 3306
+
+      
+
