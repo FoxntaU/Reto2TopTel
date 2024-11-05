@@ -92,15 +92,15 @@ Se recomienda el uso de una máquina con Ubuntu para la instalación y configura
 
 ### Descripción y configuración de los parámetros del proyecto 
 
-Para ejecutar el proyecto, sigue los pasos en el archivo `Run.txt`:
+Para ejecutar el proyecto, sigue los pasos en el archivo `commands.txt`:
 
 **1. Configurar Kubernetes en la nube:**
 Utiliza un servicio como EKS (AWS).
 
 **2. Clonar el Repositorio:**
 ```bash
-git clone https://github.com/YourRepo/Reto2K8s.git
-cd Reto2K8s
+git clone https://github.com/FoxntaU/Reto2TopTel
+cd Reto2TopTel
 ```
 
 **3. Desplegar los servicios en Kubernetes:**
