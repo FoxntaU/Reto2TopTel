@@ -50,7 +50,7 @@ Se cumplió con todos los aspectos requeridos para este reto.
 ## 2. Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
 ### Diseño de Alto Nivel:
-El sistema se basa en una arquitectura distribuida utilizando Kubernetes para gestionar la disponibilidad y el escalado de los diferentes componentes de Drupal. La arquitectura incluye una capa de balanceo de cargas (Nginx), una base de datos separada gestionada en un servicio de base de datos dentro del clúster Kubernetes, y un servidor de archivos basado en NFS para almacenar los archivos de Moodle de manera distribuida.
+El sistema se basa en una arquitectura distribuida utilizando Kubernetes para gestionar la disponibilidad y el escalado de los diferentes componentes de Drupal. La arquitectura incluye una capa de balanceo de cargas (Nginx), una base de datos separada gestionada en un servicio de base de datos dentro del clúster Kubernetes, y un servidor de archivos basado en NFS para almacenar los archivos de Drupal de manera distribuida.
 
 #### Arquitectura del Despliegue:
   El sistema se divide en tres capas principales: 
