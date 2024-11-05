@@ -15,7 +15,7 @@ Alvaro Enrique Ospina Sanjuan - aeospinas@eafit.edu.co
 
 Tópicos Especiales en Telemática, 2024-2 Reto No 2
 
-Despliegue de LMS Moodle en Kubernetes con alta disponibilidad, balanceo de cargas, y almacenamiento externo
+Despliegue de CMS **DRUPAL**  en Kubernetes con alta disponibilidad, balanceo de cargas, y almacenamiento externo
 
 ### Presentación
 [Presentacion en CANVA](https://www.canva.com/design/DAGVm1YMVts/Vu6GQm-FVb-lT7ItbsMyoQ/edit)
@@ -33,7 +33,7 @@ El objetivo del reto es lograr que el clúster mantenga la disponibilidad en la 
 ### 1.1. Qué aspectos cumplió o desarrolló de la actividad propuesta por el profesor 
 #### Requerimientos Funcionales Cumplidos:
 
-- **Alta disponibilidad y autoescalado:** Se configuró Kubernetes para que los pods de la aplicación Drupal y los servicios asociados, como la base de datos y almacenamiento de archivos, se escalen automáticamente según la carga. Esto asegura que la plataforma LMS pueda soportar un alto tráfico sin interrupciones.
+- **Alta disponibilidad y autoescalado:** Se configuró Kubernetes para que los pods de la aplicación Drupal y los servicios asociados, como la base de datos y almacenamiento de archivos. Esto asegura que la plataforma LMS pueda soportar un alto tráfico sin interrupciones.
 - **Balanceo de cargas:** Nginx se implementó como un balanceador de cargas en la capa de aplicación para distribuir eficientemente las solicitudes de los usuarios entre los diferentes pods de Drupal.
 - **Dominio y SSL:** Se implementó un dominio personalizado para el acceso a Drupal (https://reto2.sudominio.tld) con un certificado SSL para asegurar las conexiones.
 
@@ -54,7 +54,7 @@ El sistema se basa en una arquitectura distribuida utilizando Kubernetes para ge
 
 #### Arquitectura del Despliegue:
   El sistema se divide en tres capas principales: 
-  1. **Capa de Aplicación:** Drupal se despliega en pods de Kubernetes que son autoescalables y balanceados por Nginx.
+  1. **Capa de Aplicación:** Drupal se despliega en pods de Kubernetes y balanceados por Nginx.
   2. **Capa de Base de Datos:** Se implementa un servicio de base de datos externo dentro del clúster Kubernetes.
   3. **Capa de Almacenamiento:** El almacenamiento de archivos se maneja mediante un servidor EFS, que puede estar gestionado dentro del clúster.
 
@@ -152,5 +152,6 @@ kubectl apply -f all.yaml
 ## 5. Referencias:
 - Despliegue de WordPress en AWS EKS: https://github.com/st0263eafit/st0263-242/tree/main/eks-wp
 - Documentación oficial de Kubernetes: https://kubernetes.io/docs/home/
+- Documentacion oficial de drupal bitnami https://hub.docker.com/r/bitnami/drupal/
 
 
