@@ -1,0 +1,19 @@
+apiVersion: v1
+kind: Pod
+metadata:
+  name: efs-cleanup-pod
+spec:
+  containers:
+    - name: efs-cleanup-container
+      image: amazonlinux
+      command: ["/bin/sh", "-c"]
+      args: ["rm -rf /mnt/efs/* && echo 'EFS Cleanup Complete' && tail -f /dev/null"]
+      volumeMounts:
+        - name: efs-volume
+          mountPath: /mnt/efs
+  volumes:
+    - name: efs-volume
+      persistentVolumeClaim:
+        claimName: drupal-efs-pvc
+  restartPolicy: Never
+

@@ -23,7 +23,7 @@ spec:
             - name: DRUPAL_DATA_TO_PERSIST
               value: "sites/ themes/ modules/ profiles/"
             - name: DRUPAL_SKIP_BOOTSTRAP
-              value: "yes"
+              value: "no"
             - name: DRUPAL_HASH_SALT
               value: "89f19dbfe6df8d936305a84c0ef632e605dbcd35497a62bf03e6d7faca3ae3f0"
             - name: DRUPAL_CONFIG_SYNC_DIR
