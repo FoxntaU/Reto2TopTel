@@ -15,7 +15,7 @@ Alvaro Enrique Ospina Sanjuan - aeospinas@eafit.edu.co
 
 Tópicos Especiales en Telemática, 2024-2 Reto No 2
 
-Despliegue de CMS **DRUPAL**  en Kubernetes con alta disponibilidad, balanceo de cargas, y almacenamiento externo
+Despliegue de CMS **DRUPAL** en Kubernetes con alta disponibilidad, balanceo de cargas, y almacenamiento externo
 
 ### Presentación
 [Presentacion en CANVA](https://www.canva.com/design/DAGVm1YMVts/Vu6GQm-FVb-lT7ItbsMyoQ/edit)
@@ -26,7 +26,7 @@ Despliegue de CMS **DRUPAL**  en Kubernetes con alta disponibilidad, balanceo de
 ### Documentación
 ## 1. Breve descripción de la actividad
 
-La actividad consiste en desplegar un sistema de gestión de aprendizaje Drupal en un clúster de alta disponibilidad utilizando Kubernetes. El sistema cuenta con un balanceador de cargas (Nginx), una base de datos separada (DBServer) y un servidor de archivos (FileServer). Todo el sistema está autoescalado y gestionado en un entorno en la nube, con un dominio personalizado y certificado SSL.
+La actividad consiste en desplegar un sistema de gestión de contenidos Drupal en un clúster de alta disponibilidad utilizando Kubernetes. El sistema cuenta con un balanceador de cargas (Nginx), una base de datos separada (DBServer) y un servidor de archivos (FileServer). Todo el sistema está autoescalado y gestionado en un entorno en la nube, con un dominio personalizado y certificado SSL.
 
 El objetivo del reto es lograr que el clúster mantenga la disponibilidad en la capa de aplicación, base de datos y almacenamiento, así como implementar un dominio accesible mediante HTTPS.
 
@@ -45,7 +45,8 @@ El objetivo del reto es lograr que el clúster mantenga la disponibilidad en la 
 
 ### 1.2. Qué aspectos NO cumplió o desarrolló de la actividad propuesta por el profesor 
 
-Se cumplió con todos los aspectos requeridos para este reto. 
+Se cumplió con todos los aspectos requeridos para este reto, aunque se vieron algunas dificultades con el software moodle debido a que no se pudo escalar y solo nos permitia tener en modo running un solo pod; sin embargo se pudo realizar satisfactoriamente con Drupal
+[Link al codigo de drupal](https://github.com/FoxntaU/Reto2TopTel/tree/main/Drupal)
 
 ## 2. Información general de diseño de alto nivel, arquitectura, patrones, mejores prácticas utilizadas.
 
